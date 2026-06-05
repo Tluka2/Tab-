@@ -3,6 +3,40 @@
   import { defaultSettings, searchEngines } from "./lib/defaults";
   import { loadSettings, saveSettings } from "./lib/settings";
   import type { AppSettings, Shortcut, WallpaperItem } from "./lib/types";
+
+  const commonSites = [
+    { name: "Bilibili", url: "https://www.bilibili.com" },
+    { name: "Google", url: "https://www.google.com" },
+    { name: "YouTube", url: "https://www.youtube.com" },
+    { name: "GitHub", url: "https://github.com" },
+    { name: "Baidu", url: "https://www.baidu.com" },
+    { name: "Bing", url: "https://www.bing.com" },
+    { name: "Wikipedia", url: "https://www.wikipedia.org" },
+    { name: "Reddit", url: "https://www.reddit.com" },
+    { name: "Twitter/X", url: "https://x.com" },
+    { name: "Instagram", url: "https://www.instagram.com" },
+    { name: "知乎", url: "https://www.zhihu.com" },
+    { name: "微博", url: "https://weibo.com" },
+    { name: "淘宝", url: "https://www.taobao.com" },
+    { name: "京东", url: "https://www.jd.com" },
+    { name: "豆瓣", url: "https://www.douban.com" },
+    { name: "抖音", url: "https://www.douyin.com" },
+    { name: "Gmail", url: "https://mail.google.com" },
+    { name: "Outlook", url: "https://outlook.live.com" },
+    { name: "Stack Overflow", url: "https://stackoverflow.com" },
+    { name: "MDN", url: "https://developer.mozilla.org" },
+    { name: "ChatGPT", url: "https://chatgpt.com" },
+    { name: "DeepSeek", url: "https://chat.deepseek.com" },
+    { name: "豆包", url: "https://www.doubao.com" },
+    { name: "Vercel", url: "https://vercel.com" },
+    { name: "Netflix", url: "https://www.netflix.com" },
+    { name: "Spotify", url: "https://open.spotify.com" },
+    { name: "Notion", url: "https://www.notion.so" },
+    { name: "Figma", url: "https://www.figma.com" },
+    { name: "Canva", url: "https://www.canva.com" },
+    { name: "Google Maps", url: "https://maps.google.com" },
+    { name: "Google Translate", url: "https://translate.google.com" },
+  ];
   import { deleteWallpaper, getWallpaperBlob, listWallpapers, updateWallpaper } from "./lib/wallpaperDb";
   import {
     fetchBingDailyWallpaper,
@@ -381,7 +415,10 @@
       <button aria-label="搜索" on:click={navigateToSearch}>搜索</button>
       {#if searchQuery.trim()}
         {@const lower = searchQuery.trim().toLowerCase()}
-        {@const matches = sortedShortcuts.filter((s) => s.name.toLowerCase().includes(lower) || s.url.toLowerCase().includes(lower))}
+        {@const shortcutMatches = sortedShortcuts.filter((s) => s.name.toLowerCase().includes(lower) || s.url.toLowerCase().includes(lower))}
+        {@const shortcutUrls = new Set(shortcutMatches.map((s) => s.url))}
+        {@const commonMatches = commonSites.filter((s) => !shortcutUrls.has(s.url) && (s.name.toLowerCase().includes(lower) || s.url.toLowerCase().includes(lower)))}
+        {@const matches = [...shortcutMatches.map((s) => ({ name: s.name, url: s.url, icon: s.icon })), ...commonMatches]}
         {#if matches.length > 0}
           <div class="search-suggestions">
             {#each matches as shortcut}
