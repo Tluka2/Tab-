@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark light" />
+    <title>新标签页</title>
+    <script src="boot.js"></script>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main id="app">
+      <div id="wallpaperBlurFill" class="wallpaper-blur-fill hidden"></div>
+      <div id="wallpaper" class="wallpaper overlay-soft"></div>
+      <section id="workspace" class="workspace pos-center">
+        <form id="searchForm" class="search-shell" autocomplete="off">
+          <input id="searchInput" aria-label="搜索" spellcheck="false" />
+          <button type="submit">搜索</button>
+          <div id="searchSuggestions" class="search-suggestions hidden"></div>
+        </form>
+        <div id="shortcuts" class="shortcuts"></div>
+      </section>
+      <p id="wallpaperAttribution" class="wallpaper-attribution hidden"></p>
+      <button id="settingsButton" class="settings-button" type="button">设置</button>
+      <aside id="settingsPanel" class="panel hidden" aria-label="设置面板"></aside>
+      <div id="dialogHost"></div>
+    </main>
+    <script src="app.js"></script>
+  </body>
+</html>

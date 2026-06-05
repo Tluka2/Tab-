@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "新标签页",
+  "description": "快速、安静、可自定义的新标签页。",
+  "version": "0.1.0",
+  "chrome_url_overrides": {
+    "newtab": "index.html"
+  },
+  "permissions": ["storage"],
+  "host_permissions": ["https://www.bing.com/*"],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'; img-src 'self' data: blob: https:; connect-src 'self' https://www.bing.com"
+  },
+  "minimum_chrome_version": "114"
+}
