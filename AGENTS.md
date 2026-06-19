@@ -17,6 +17,7 @@ Core product principles:
 - Customization should be direct and visual.
 - The interface should work well without network access after initial setup.
 - Features should be added in layers, without compromising new-tab startup speed.
+- The first screen is a fast wallpaper, search, and shortcuts experience. Do not turn it into a heavy dashboard.
 
 ## Required Feature Scope
 
@@ -138,6 +139,16 @@ New tab pages are latency-sensitive. Follow these constraints:
 - Avoid remote fonts in the default UI.
 - Avoid large UI libraries unless there is a clear reason.
 - Keep background transitions smooth and avoid visible white flashes.
+- Keep the default startup path free of video decoding, WebGL render loops, remote fonts, large UI libraries, and always-on animation loops.
+- Treat settings, import/export, advanced wallpaper tools, and other nonessential panels as post-paint UI.
+- Prefer idle work, queued work, and cached previews over synchronous IndexedDB reads or image decoding during startup.
+
+Strict performance budget:
+
+- New tab ready time should stay under 800 ms in normal local smoke runs.
+- First-frame screenshot checks should keep `whiteRatio` at or near `0`.
+- Rotation memory checks must stay within the existing `smoke-rotation-memory.mjs` threshold: no loading stalls, no three-pick repeats, no preheat-consumption failures, live object URLs bounded, and post-GC heap growth under 5 MB.
+- Any change that intentionally relaxes a budget must document the reason in the PR or commit notes and update the smoke threshold deliberately.
 
 Recommended boot sequence:
 
@@ -147,6 +158,26 @@ Recommended boot sequence:
 4. Load saved configuration.
 5. Load full-resolution wallpaper from IndexedDB or network.
 6. Mount optional panels and advanced UI after first paint.
+
+Heavy feature policy:
+
+- Local video backgrounds, online image URL wallpapers, dynamic canvas/WebGL backgrounds, and theme/background packages must be disabled by default.
+- These features may have visible settings entry points, but the UI must clearly note possible CPU, memory, network, or battery impact before enabling them.
+- Heavy features must lazy-load their code and assets only after explicit user action.
+- Disabling a heavy feature must release object URLs, media handles, animation frames, timers, and other retained resources.
+- Heavy features must not add new permissions unless the permission is essential and the privacy impact is documented.
+
+Required performance gates before delivery:
+
+- `npm.cmd run check`
+- `npm.cmd run build`
+- `node scripts\verify-extension.mjs`
+- `powershell -ExecutionPolicy Bypass -File scripts\edge-smoke.ps1`
+- Chrome key checks:
+  - `$env:SMOKE_BROWSER='chrome'; node scripts\smoke-functional.mjs`
+  - `$env:SMOKE_BROWSER='chrome'; node scripts\smoke-first-frame.mjs`
+  - `$env:SMOKE_BROWSER='chrome'; node scripts\smoke-performance.mjs`
+  - `$env:SMOKE_BROWSER='chrome'; node scripts\smoke-rotation-memory.mjs`
 
 ## Data Model Guidelines
 
@@ -178,10 +209,20 @@ The extension must respect browser extension limits:
 - Avoid broad permissions.
 - Prefer local-only data storage.
 - Keep privacy implications clear for any network-backed feature.
+- Do not add remotely hosted executable code.
+- Do not broaden host permissions for convenience. Add a permission only for a user-facing feature and document why.
 
 The project should not attempt to modify native browser UI such as the address bar, tab strip, or browser chrome. The supported customization surface is the new tab page, extension pages, optional side panel, and extension settings.
 
 ## Roadmap
+
+Near-term sequencing rule:
+
+- First stabilize and release a baseline commit for the completed v0.1 foundation.
+- After that, use a small "parallel" cadence: each version may include one lightweight experience polish item and one gated capability item, but no broad feature pileups.
+- Product polish should generally come before heavy wallpaper expansion: settings structure, default visuals, shortcut management ergonomics, copy, and empty states.
+- Wallpaper expansion should then proceed from lighter to heavier capabilities: online image URL wallpapers, import packages, local video backgrounds, then dynamic canvas/WebGL backgrounds.
+- Video and WebGL work must remain isolated lazy-loaded modules outside the default startup path.
 
 ### v0.1: PlainTab-Style Foundation
 
@@ -232,6 +273,18 @@ The project should not attempt to modify native browser UI such as the address b
 - Avoid premature abstraction, but do not duplicate storage or migration logic.
 - Keep UI controls accessible by keyboard.
 - Test core flows manually in Chrome or Edge before considering a feature complete.
+- Keep direct extension files and Svelte/Vite source behavior aligned when both are present.
+- Add or update smoke coverage for any new user-facing feature or performance-sensitive path.
+- Prefer small, reversible changes that preserve the strict performance budget.
+- If a feature increases CPU, memory, bundle size, permissions, or startup work, record the tradeoff and keep it opt-in unless explicitly required.
+
+## Release And Git Standards
+
+- Before a release commit, run the required performance gates listed above.
+- Package the extension with `powershell -ExecutionPolicy Bypass -File scripts\package-extension.ps1`.
+- Keep `release\tab-edge-extension.zip` aligned with the committed extension files when publishing a local release.
+- Prefer one coherent baseline commit for the current v0.1 foundation unless the user asks for split commits.
+- Suggested baseline commit message: `feat: build performant customizable new tab extension foundation`.
 
 ## Non-Goals For Early Versions
 

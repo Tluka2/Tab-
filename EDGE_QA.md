@@ -39,6 +39,9 @@ This runs:
 - Static MV3 and CSP validation.
 - Desktop and narrow viewport screenshots.
 - Functional smoke test for search submit, visual settings application, shortcut add/edit/delete/reorder flows, number-key open, Esc close, and keyboard focus.
+- Per-wallpaper More dialog visual smoke with desktop and narrow screenshots.
+- First-frame cold and warm startup smoke to catch white flash regressions.
+- Long rotation memory smoke with 60 rotations, preheated wallpaper consumption checks, three-wallpaper no-repeat checks, object URL accounting, and JS heap sampling.
 - Unpacked extension load target verification.
 - Startup performance smoke test.
 
@@ -53,8 +56,11 @@ After loading in Edge:
 5. Add, edit, delete, and drag-sort shortcuts.
 6. Upload a local wallpaper and reopen a new tab.
 7. Fetch Bing daily wallpaper and confirm attribution appears when available.
-8. Toggle blur, dim, brightness, overlay, theme, layout, and keyboard options.
-9. Export settings, re-import the JSON, and confirm preferences are restored.
+8. Open a wallpaper row's More dialog and confirm fit, position, overlay, blur, dim, brightness, and reset work without changing the wallpaper-list layout.
+9. Mark at least three wallpapers for rotation and confirm repeated "Next" actions do not repeat within any three consecutive picks.
+10. Confirm repeated "Next" actions feel smooth and do not leave the page in a loading state.
+11. Toggle blur, dim, brightness, overlay, theme, layout, and keyboard options.
+12. Export settings, re-import the JSON, and confirm preferences are restored.
 
 ## Known Headless Limitation
 

@@ -78,3 +78,28 @@ export async function getWallpaperBlob(blobId: string): Promise<Blob | undefined
   const stored = await tx<StoredBlob | undefined>(BLOB_STORE, "readonly", (store) => store.get(blobId));
   return stored?.blob;
 }
+
+export async function getWallpaperStorageSummary(): Promise<{ count: number; bytes: number; missing: number }> {
+  const items = await listWallpapers();
+  let bytes = 0;
+  let missing = 0;
+  for (const item of items) {
+    const blob = await getWallpaperBlob(item.blobId);
+    if (blob) bytes += blob.size;
+    else missing += 1;
+  }
+  return { count: items.length, bytes, missing };
+}
+
+export async function deleteBrokenWallpapers(): Promise<number> {
+  const items = await listWallpapers();
+  let deleted = 0;
+  for (const item of items) {
+    const blob = await getWallpaperBlob(item.blobId);
+    if (!blob) {
+      await deleteWallpaper(item);
+      deleted += 1;
+    }
+  }
+  return deleted;
+}

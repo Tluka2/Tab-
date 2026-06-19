@@ -3,15 +3,18 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="color-scheme" content="dark light" />
+    <meta name="color-scheme" content="dark" />
     <title>新标签页</title>
+    <link rel="stylesheet" href="boot.css" />
     <script src="boot.js"></script>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <main id="app">
+      <div id="wallpaperBack" class="wallpaper-back"></div>
       <div id="wallpaperBlurFill" class="wallpaper-blur-fill hidden"></div>
-      <div id="wallpaper" class="wallpaper overlay-soft"></div>
+      <div id="wallpaperAmbientFill" class="wallpaper-ambient-fill hidden"></div>
+      <div id="wallpaper" class="wallpaper"></div>
       <section id="workspace" class="workspace pos-center">
         <form id="searchForm" class="search-shell" autocomplete="off">
           <input id="searchInput" aria-label="搜索" spellcheck="false" />

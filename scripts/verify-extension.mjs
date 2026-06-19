@@ -6,7 +6,7 @@ import { spawnSync } from "node:child_process";
 const root = process.cwd();
 const extensionDir = join(root, "extension");
 const publicDir = join(root, "public");
-const requiredFiles = ["manifest.json", "index.html", "styles.css", "app.js", "boot.js"];
+const requiredFiles = ["manifest.json", "index.html", "styles.css", "app.js", "boot.js", "boot.css"];
 
 const checks = [];
 
@@ -83,9 +83,12 @@ else fail("no inline HTML scripts or handlers", "Inline script or event handler 
 
 assertIncludes(
   html,
-  ['href="styles.css"', 'src="boot.js"', 'src="app.js"', 'id="wallpaperAttribution"'],
+  ['href="boot.css"', 'href="styles.css"', 'src="boot.js"', 'src="app.js"', 'id="wallpaperAttribution"'],
   "HTML references extension assets"
 );
+
+const bootCss = await readFile(join(extensionDir, "boot.css"), "utf8");
+assertIncludes(bootCss, ["#11191a", "#080d0e", "overflow: hidden"], "boot CSS prevents white startup canvas");
 
 const appJs = await readFile(join(extensionDir, "app.js"), "utf8");
 const bootJs = await readFile(join(extensionDir, "boot.js"), "utf8");
@@ -107,6 +110,8 @@ assertIncludes(
     "HPImageArchive.aspx",
     "createImageBitmap",
     "tab.bootWallpaperPreview",
+    "previewDataUrl",
+    "backfillWallpaperPreviews",
     "searchEngines",
     "customTemplate",
     "dragstart",

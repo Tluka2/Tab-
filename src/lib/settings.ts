@@ -1,4 +1,4 @@
-import { defaultSettings, searchEngines, SETTINGS_KEY, SETTINGS_VERSION } from "./defaults";
+import { BOOT_SETTINGS_KEY, defaultSettings, searchEngines, SETTINGS_KEY, SETTINGS_VERSION } from "./defaults";
 import type { AppSettings, Shortcut } from "./types";
 
 const hasChromeStorage = () =>
@@ -37,22 +37,21 @@ const normalizeSearchTemplate = (value: unknown): string => {
 
 const normalizeShortcuts = (value: unknown): Shortcut[] => {
   if (!Array.isArray(value)) return defaultSettings.shortcuts;
-  return value
-    .filter(isRecord)
-    .map((item, index) => {
-      const url = asString(item.url, "").trim();
-      const name = asString(item.name, "").trim();
-      if (!name || !url) return undefined;
-      return {
-        id: asString(item.id, crypto.randomUUID()),
-        name,
-        url,
-        icon: asString(item.icon, "") || undefined,
-        group: asString(item.group, "") || undefined,
-        order: asNumber(item.order, index, 0, 999)
-      } satisfies Shortcut;
-    })
-    .filter((item): item is Shortcut => Boolean(item))
+  const shortcuts: Shortcut[] = [];
+  value.filter(isRecord).forEach((item, index) => {
+    const url = asString(item.url, "").trim();
+    const name = asString(item.name, "").trim();
+    if (!name || !url) return;
+    shortcuts.push({
+      id: asString(item.id, crypto.randomUUID()),
+      name,
+      url,
+      icon: asString(item.icon, "") || undefined,
+      group: asString(item.group, "") || undefined,
+      order: asNumber(item.order, index, 0, 999)
+    });
+  });
+  return shortcuts
     .sort((a, b) => a.order - b.order)
     .map((item, index) => ({ ...item, order: index }));
 };
@@ -78,7 +77,10 @@ export const normalizeSettings = (value: unknown): AppSettings => {
       source: asEnum(wallpaper.source, defaultSettings.wallpaper.source, ["bing", "local", "rotation"]),
       activeId: typeof wallpaper.activeId === "string" ? wallpaper.activeId : undefined,
       rotationIds: asStringArray(wallpaper.rotationIds),
-      fit: asEnum(wallpaper.fit, defaultSettings.wallpaper.fit, ["cover", "contain", "fill", "blur"]),
+      rotationRecentIds: asStringArray(wallpaper.rotationRecentIds),
+      rotationNextId: typeof wallpaper.rotationNextId === "string" ? wallpaper.rotationNextId : undefined,
+      fit: asEnum(wallpaper.fit, defaultSettings.wallpaper.fit, ["cover", "contain", "fill", "blur", "ambient"]),
+      position: asEnum(wallpaper.position, defaultSettings.wallpaper.position, ["center", "top", "bottom", "left", "right"]),
       blur: asNumber(wallpaper.blur, defaultSettings.wallpaper.blur, 0, 24),
       dim: asNumber(wallpaper.dim, defaultSettings.wallpaper.dim, 0, 0.75),
       brightness: asNumber(wallpaper.brightness, defaultSettings.wallpaper.brightness, 0.55, 1.25),
@@ -109,23 +111,60 @@ export const normalizeSettings = (value: unknown): AppSettings => {
   };
 };
 
+function storeBootSettings(settings: AppSettings): void {
+  try {
+    localStorage.setItem(
+      BOOT_SETTINGS_KEY,
+      JSON.stringify({
+        theme: settings.theme,
+        wallpaper: {
+          fit: settings.wallpaper.fit,
+          position: settings.wallpaper.position,
+          blur: settings.wallpaper.blur,
+          dim: settings.wallpaper.dim,
+          brightness: settings.wallpaper.brightness,
+          overlay: settings.wallpaper.overlay
+        },
+        search: {
+          style: settings.search.style,
+          visibility: settings.search.visibility
+        },
+        layout: settings.layout
+      })
+    );
+  } catch {
+    // Boot settings are only used to prevent first-frame flashes.
+  }
+}
+
 export async function loadSettings(): Promise<AppSettings> {
   if (hasChromeStorage()) {
     const result = await chrome.storage.local.get(SETTINGS_KEY);
-    return normalizeSettings(result[SETTINGS_KEY]);
+    const next = normalizeSettings(result[SETTINGS_KEY]);
+    storeBootSettings(next);
+    return next;
   }
 
   const raw = localStorage.getItem(SETTINGS_KEY);
-  if (!raw) return normalizeSettings(undefined);
+  if (!raw) {
+    const next = normalizeSettings(undefined);
+    storeBootSettings(next);
+    return next;
+  }
   try {
-    return normalizeSettings(JSON.parse(raw));
+    const next = normalizeSettings(JSON.parse(raw));
+    storeBootSettings(next);
+    return next;
   } catch {
-    return normalizeSettings(undefined);
+    const next = normalizeSettings(undefined);
+    storeBootSettings(next);
+    return next;
   }
 }
 
 export async function saveSettings(settings: unknown): Promise<AppSettings> {
   const next = normalizeSettings(settings);
+  storeBootSettings(next);
   if (hasChromeStorage()) {
     await chrome.storage.local.set({ [SETTINGS_KEY]: next });
     return next;

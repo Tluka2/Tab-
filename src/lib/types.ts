@@ -1,5 +1,6 @@
 export type ThemeMode = "auto" | "light" | "dark";
-export type WallpaperFit = "cover" | "contain" | "fill" | "blur";
+export type WallpaperFit = "cover" | "contain" | "fill" | "blur" | "ambient";
+export type WallpaperPosition = "center" | "top" | "bottom" | "left" | "right";
 export type WallpaperSource = "bing" | "local" | "rotation";
 export type SearchPosition = "upper" | "center" | "lower";
 export type SearchStyle = "glass" | "solid" | "line";
@@ -20,16 +21,27 @@ export type WallpaperItem = {
   source: "bing" | "local";
   blobId: string;
   thumbDataUrl?: string;
+  previewDataUrl?: string;
   createdAt: number;
   lastUsedAt?: number;
   attribution?: string;
+  contentHash?: string;
+  fit?: WallpaperFit;
+  position?: WallpaperPosition;
+  blur?: number;
+  dim?: number;
+  brightness?: number;
+  overlay?: "none" | "vignette" | "soft";
 };
 
 export type WallpaperSettings = {
   source: WallpaperSource;
   activeId?: string;
   rotationIds: string[];
+  rotationRecentIds: string[];
+  rotationNextId?: string;
   fit: WallpaperFit;
+  position: WallpaperPosition;
   blur: number;
   dim: number;
   brightness: number;

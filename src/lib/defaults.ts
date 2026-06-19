@@ -2,6 +2,7 @@ import type { AppSettings, SearchEngine } from "./types";
 
 export const SETTINGS_KEY = "tab.settings";
 export const BOOT_WALLPAPER_PREVIEW_KEY = "tab.bootWallpaperPreview";
+export const BOOT_SETTINGS_KEY = "tab.bootSettings";
 export const SETTINGS_VERSION = 1;
 
 export const searchEngines: SearchEngine[] = [
@@ -26,7 +27,9 @@ export const defaultSettings: AppSettings = {
   wallpaper: {
     source: "bing",
     rotationIds: [],
+    rotationRecentIds: [],
     fit: "cover",
+    position: "center",
     blur: 0,
     dim: 0.28,
     brightness: 1,

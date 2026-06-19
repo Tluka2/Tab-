@@ -4,7 +4,10 @@
     Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
-  --boot-wallpaper: linear-gradient(135deg, #1a2530, #111519);
+  --boot-wallpaper:
+    radial-gradient(circle at 18% 12%, rgb(112 225 200 / 0.12), transparent 28%),
+    radial-gradient(circle at 76% 72%, rgb(116 154 255 / 0.1), transparent 30%),
+    linear-gradient(135deg, #11191a, #080d0e 58%, #101419);
 }
 
 * {
@@ -43,12 +46,14 @@ label.file-button {
 
 main {
   --wallpaper-url: var(--boot-wallpaper);
-  --wallpaper-blur: 0px;
-  --wallpaper-dim: 0.28;
-  --wallpaper-brightness: 1;
-  --accent: #70e1c8;
-  --icon-opacity: 0.9;
-  --panel-alpha: 0.72;
+  --ambient-wallpaper-bg: var(--boot-wallpaper);
+  --wallpaper-position: var(--boot-wallpaper-position, center);
+  --wallpaper-blur: var(--boot-wallpaper-blur, 0px);
+  --wallpaper-dim: var(--boot-wallpaper-dim, 0.28);
+  --wallpaper-brightness: var(--boot-wallpaper-brightness, 1);
+  --accent: var(--boot-accent, #70e1c8);
+  --icon-opacity: var(--boot-icon-opacity, 0.9);
+  --panel-alpha: var(--boot-panel-alpha, 0.72);
   --ui-fg: #f8fbf9;
   --panel-bg: rgb(14 20 21 / var(--panel-alpha));
   --control-bg: rgb(255 255 255 / 0.1);
@@ -84,14 +89,32 @@ main {
   --dialog-bg: rgb(18 24 25 / 0.92);
 }
 
+.wallpaper-back,
 .wallpaper {
   position: fixed;
   inset: 0;
+  background-position: var(--wallpaper-position, center);
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+
+.wallpaper-back {
+  z-index: -4;
+  background-image: var(--boot-wallpaper);
+  filter: blur(var(--wallpaper-blur, 0px)) brightness(var(--wallpaper-brightness, 1));
+  transform: scale(1.03);
+}
+
+.wallpaper {
   z-index: -2;
   background-image: var(--wallpaper-url);
-  background-position: center;
-  filter: blur(var(--wallpaper-blur)) brightness(var(--wallpaper-brightness));
-  transition: filter 180ms ease, background-image 220ms ease;
+  opacity: 1;
+  filter: blur(var(--wallpaper-blur, 0px)) brightness(var(--wallpaper-brightness, 1));
+  transition: opacity 180ms ease, filter 180ms ease;
+}
+
+main.wallpaper-loading .wallpaper {
+  opacity: 0;
 }
 
 .wallpaper.fit-cover {
@@ -113,6 +136,11 @@ main {
   background-repeat: no-repeat;
 }
 
+.wallpaper.fit-ambient {
+  background-size: contain;
+  background-repeat: no-repeat;
+}
+
 .wallpaper-blur-fill {
   position: fixed;
   inset: 0;
@@ -127,6 +155,19 @@ main {
 }
 
 .wallpaper-blur-fill.visible {
+  display: block;
+}
+
+.wallpaper-ambient-fill {
+  position: fixed;
+  inset: 0;
+  z-index: -3;
+  display: none;
+  background: var(--ambient-wallpaper-bg);
+  background-size: cover;
+}
+
+.wallpaper-ambient-fill.visible {
   display: block;
 }
 
@@ -154,12 +195,15 @@ main {
 
 .workspace {
   grid-area: 1 / 1;
-  align-self: center;
+  align-self: stretch;
   justify-self: center;
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 28px;
   width: min(760px, calc(100vw - 36px));
+  min-height: 100vh;
   padding: 24px 0;
+  justify-content: center;
 }
 
 #dialogHost {
@@ -167,17 +211,21 @@ main {
 }
 
 .pos-upper {
-  align-self: start;
-  margin-top: 13vh;
+  justify-content: flex-start;
+  padding-top: 13vh;
 }
 
 .pos-center {
-  align-self: center;
+  justify-content: center;
 }
 
 .pos-lower {
-  align-self: end;
-  margin-bottom: 12vh;
+  justify-content: flex-end;
+  padding-bottom: 12vh;
+}
+
+.pos-lower .shortcuts {
+  order: -1;
 }
 
 .search-shell {
@@ -315,6 +363,17 @@ main {
   grid-template-columns: repeat(auto-fit, minmax(86px, 96px));
   gap: 12px;
   justify-content: center;
+}
+
+.shortcut-group-title {
+  grid-column: 1 / -1;
+  margin: 4px 0 -2px;
+  color: inherit;
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  opacity: 0.72;
+  text-align: center;
 }
 
 .shortcuts.density-compact {
@@ -469,7 +528,8 @@ label.file-button:hover {
 
 .panel input:not([type="range"]):not([type="color"]),
 .panel select,
-.dialog input {
+.dialog input:not([type="range"]),
+.dialog select {
   width: 100%;
   min-height: 38px;
   border: 1px solid rgb(255 255 255 / 0.16);
@@ -479,8 +539,28 @@ label.file-button:hover {
   background: var(--control-bg);
 }
 
+.panel select,
+.dialog select {
+  color-scheme: dark;
+}
+
 .panel select option,
-.panel select optgroup {
+.panel select optgroup,
+.dialog select option,
+.dialog select optgroup {
+  color: #f8fbf9;
+  background: #202829;
+}
+
+.theme-light .panel select,
+.theme-light .dialog select {
+  color-scheme: light;
+}
+
+.theme-light .panel select option,
+.theme-light .panel select optgroup,
+.theme-light .dialog select option,
+.theme-light .dialog select optgroup {
   color: #17201d;
   background: #ffffff;
 }
@@ -493,7 +573,8 @@ label.file-button:hover {
   background: transparent;
 }
 
-.panel input[type="range"] {
+.panel input[type="range"],
+.dialog input[type="range"] {
   width: 100%;
   accent-color: var(--accent);
 }
@@ -513,36 +594,161 @@ label.file-button:hover {
   opacity: 0.76;
 }
 
+.rotation-status {
+  line-height: 1.45;
+}
+
 .wallpaper-list {
   display: grid;
-  grid-template-columns: 1fr auto auto;
-  gap: 8px;
-  max-height: 240px;
+  gap: 6px;
+  max-height: 260px;
   overflow-y: auto;
   padding-right: 4px;
 }
 
-.wallpaper-list button:first-child {
+.wallpaper-item {
   display: grid;
-  grid-template-columns: 38px 1fr;
+  grid-template-columns: 48px 1fr auto;
   align-items: center;
   gap: 8px;
-  text-align: left;
+  padding: 4px 8px;
+  border: 1px solid rgb(255 255 255 / 0.08);
+  border-radius: 8px;
+  background: rgb(255 255 255 / 0.03);
 }
 
-.wallpaper-list button.active {
+.wallpaper-thumb-button {
+  width: 48px;
+  height: 32px;
+  min-height: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+}
+
+.wallpaper-item img {
+  width: 48px;
+  height: 32px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.wallpaper-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.wallpaper-item.active {
   border-color: var(--accent);
 }
 
-.wallpaper-list img {
-  width: 38px;
-  height: 26px;
-  object-fit: cover;
-  border-radius: 5px;
+.wallpaper-more-button {
+  min-height: 34px;
+  padding: 7px 10px;
+}
+
+.compact-details {
+  border: 1px solid rgb(255 255 255 / 0.1);
+  border-radius: 8px;
+  padding: 0 10px;
+  background: rgb(255 255 255 / 0.04);
+}
+
+.compact-details summary {
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-size: 0.82rem;
+  opacity: 0.82;
+}
+
+.compact-details > summary:not(:first-of-type) {
+  display: none;
 }
 
 .small-danger {
   color: #ffd7d7;
+}
+
+.dialog.wallpaper-options-dialog {
+  width: min(460px, 100%);
+  max-height: calc(100vh - 36px);
+  overflow: auto;
+}
+
+.wallpaper-options-dialog header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.wallpaper-options-dialog header p {
+  max-width: 300px;
+  margin: 5px 0 0;
+  overflow: hidden;
+  opacity: 0.68;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wallpaper-options-preview {
+  display: grid;
+  grid-template-columns: 92px 1fr;
+  align-items: center;
+  gap: 12px;
+  min-height: 68px;
+  padding: 10px;
+  border: 1px solid rgb(255 255 255 / 0.1);
+  border-radius: 8px;
+  background: rgb(255 255 255 / 0.05);
+}
+
+.wallpaper-options-preview img {
+  width: 92px;
+  height: 52px;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+.wallpaper-options-preview span {
+  font-size: 0.82rem;
+  opacity: 0.76;
+}
+
+.wallpaper-option-range {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 12px;
+  padding: 10px;
+  border: 1px solid rgb(255 255 255 / 0.08);
+  border-radius: 8px;
+  background: rgb(255 255 255 / 0.035);
+}
+
+.wallpaper-option-range .inline {
+  min-width: 92px;
+  min-height: 38px;
+  align-content: center;
+  white-space: nowrap;
+}
+
+@media (min-width: 760px) {
+  .dialog.wallpaper-options-dialog {
+    width: min(720px, calc(100vw - 36px));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .wallpaper-options-dialog header,
+  .wallpaper-options-preview,
+  .wallpaper-options-dialog > .button-row {
+    grid-column: 1 / -1;
+  }
 }
 
 .mini-check {
@@ -558,6 +764,50 @@ label.file-button:hover {
 .shortcut-editor-list {
   display: grid;
   gap: 8px;
+  max-height: 260px;
+  overflow-y: auto;
+  padding: 8px 0 10px;
+}
+
+.compact-details > .shortcut-editor-list {
+  display: none;
+}
+
+.shortcut-group-manager {
+  display: grid;
+  gap: 10px;
+  padding: 8px 0 10px;
+}
+
+.shortcut-manage-group {
+  display: grid;
+  gap: 8px;
+  min-height: 54px;
+  padding: 10px;
+  border: 1px dashed rgb(255 255 255 / 0.14);
+  border-radius: 8px;
+  background: rgb(255 255 255 / 0.035);
+}
+
+.shortcut-manage-group header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.shortcut-manage-group header input {
+  min-height: 34px;
+}
+
+.shortcut-manage-group header span {
+  min-width: 28px;
+  text-align: center;
+  opacity: 0.64;
+}
+
+.shortcut-row[draggable="true"] {
+  cursor: grab;
 }
 
 .shortcut-editor-list div {
@@ -628,4 +878,5 @@ label.file-button:hover {
     bottom: 58px;
     max-width: calc(100vw - 24px);
   }
+
 }

@@ -1,0 +1,13 @@
+html,
+body {
+  min-height: 100%;
+  margin: 0;
+  background:
+    radial-gradient(circle at 18% 12%, rgb(112 225 200 / 0.12), transparent 28%),
+    radial-gradient(circle at 76% 72%, rgb(116 154 255 / 0.1), transparent 30%),
+    linear-gradient(135deg, #11191a, #080d0e 58%, #101419);
+}
+
+body {
+  overflow: hidden;
+}

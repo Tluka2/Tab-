@@ -120,11 +120,26 @@ async function evaluate(ws, expression) {
   return result.result.value;
 }
 
+async function getTabs(port) {
+  return fetch(`http://127.0.0.1:${port}/json/list`).then((response) => response.json());
+}
+
+async function createTargetViaBrowser(port, url) {
+  const version = await fetch(`http://127.0.0.1:${port}/json/version`).then((response) => response.json());
+  const browserWs = await connect(version.webSocketDebuggerUrl);
+  try {
+    const created = await send(browserWs, "Target.createTarget", { url });
+    return created.targetId;
+  } finally {
+    browserWs.close();
+  }
+}
+
 try {
   const port = await waitForDevToolsPort();
   let tabs = [];
   for (let attempt = 0; attempt < 30; attempt += 1) {
-    tabs = await fetch(`http://127.0.0.1:${port}/json/list`).then((response) => response.json());
+    tabs = await getTabs(port);
     if (tabs.some((item) => item.url.startsWith("chrome-extension://"))) break;
     await wait(200);
   }
@@ -134,12 +149,16 @@ try {
 
   if (!extensionTab && anyExtensionTarget) {
     const extensionId = new URL(anyExtensionTarget.url).host;
-    const created = await fetch(
-      `http://127.0.0.1:${port}/json/new?${encodeURIComponent(`chrome-extension://${extensionId}/index.html`)}`,
-      { method: "PUT" }
-    ).then((response) => response.json());
-    extensionTab = created;
-    await wait(500);
+    const extensionUrl = `chrome-extension://${extensionId}/index.html`;
+    try {
+      await createTargetViaBrowser(port, extensionUrl);
+    } catch {}
+    for (let attempt = 0; attempt < 20; attempt += 1) {
+      tabs = await getTabs(port);
+      extensionTab = tabs.find((item) => item.url === extensionUrl);
+      if (extensionTab?.webSocketDebuggerUrl) break;
+      await wait(150);
+    }
   }
 
   if (!extensionTab?.webSocketDebuggerUrl) {
