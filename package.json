@@ -1,0 +1,32 @@
+{
+  "name": "tab-extension",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "vite build",
+    "preview": "vite preview --host 127.0.0.1",
+    "check": "svelte-check --tsconfig ./tsconfig.json",
+    "verify:extension": "node scripts/verify-extension.mjs",
+    "smoke:browser": "node scripts/smoke-browser.mjs",
+    "smoke:functional": "node scripts/smoke-functional.mjs",
+    "smoke:wallpaper-options": "node scripts/smoke-wallpaper-options-visual.mjs",
+    "smoke:first-frame": "node scripts/smoke-first-frame.mjs",
+    "smoke:rotation-memory": "node scripts/smoke-rotation-memory.mjs",
+    "smoke:extension": "node scripts/smoke-extension-load.mjs",
+    "smoke:performance": "node scripts/smoke-performance.mjs",
+    "smoke:bing": "node scripts/smoke-bing-network.mjs",
+    "smoke:edge-visible": "node scripts/smoke-edge-visible-newtab.mjs",
+    "smoke:edge": "powershell -ExecutionPolicy Bypass -File scripts\\edge-smoke.ps1",
+    "package:edge": "powershell -ExecutionPolicy Bypass -File scripts\\package-extension.ps1"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^5.0.3",
+    "@types/chrome": "^0.0.287",
+    "svelte": "^5.16.0",
+    "svelte-check": "^4.1.1",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.7"
+  }
+}
